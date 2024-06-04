@@ -87,7 +87,3 @@ impl HttpServer {
 fn api_routes<PS: PostService>() -> Router<AppState<PS>> {
     Router::new().route("/authors", post(create_author::<PS>))
 }
-
-async fn root() -> &'static str {
-    "Hello, World!\n"
-}
