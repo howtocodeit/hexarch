@@ -35,7 +35,7 @@ pub struct HttpServerConfig<'a> {
 #[derive(Debug, Clone)]
 /// The global application state shared between all request handlers.
 struct AppState<PS: PostService> {
-    post_service: PS,
+    post_service: Arc<PS>,
 }
 
 /// The application's HTTP server. The underlying HTTP package is opaque to module consumers.
@@ -58,10 +58,12 @@ impl HttpServer {
         );
 
         // Construct dependencies to inject into handlers.
-        let state = Arc::new(AppState { post_service });
+        let state = AppState {
+            post_service: Arc::new(post_service),
+        };
 
         let router = axum::Router::new()
-            .route("/", axum::routing::get(root))
+            .nest("/api", api_routes())
             .layer(trace_layer)
             .with_state(state);
 
@@ -82,8 +84,8 @@ impl HttpServer {
     }
 }
 
-fn api_routes() -> Router<_> {
-    Router::new().route("/authors", post(create_author))
+fn api_routes<PS: PostService>() -> Router<AppState<PS>> {
+    Router::new().route("/authors", post(create_author::<PS>))
 }
 
 async fn root() -> &'static str {

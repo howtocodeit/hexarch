@@ -11,7 +11,7 @@
 use std::future::Future;
 
 use crate::domain::posts::models::author::{Author, CreateAuthorRequest};
-#[allow(unused_imports)] // AuthorName is used in doc comments.
+#[allow(unused_imports)] // AuthorName is used in doc comments
 use crate::domain::posts::models::author::AuthorName;
 use crate::domain::posts::models::errors::{CreateAuthorError, CreatePostError};
 use crate::domain::posts::models::post::{CreatePostRequest, Post};
@@ -20,7 +20,7 @@ use crate::domain::posts::models::post::{CreatePostRequest, Post};
 ///
 /// External modules must conform to this contract – the domain is not concerned with the
 /// implementation details or underlying technology of any external code.
-pub trait PostService: Send + Sync + 'static {
+pub trait PostService: Clone + Send + Sync + 'static {
     /// Asynchronously create a new [Post].
     ///
     /// # Errors
@@ -46,7 +46,7 @@ pub trait PostService: Send + Sync + 'static {
 ///
 /// Repository implementations must conform to this contract – the domain is not concerned with
 /// the implementation details or underlying technology of any particular implementation.
-pub trait PostRepository: Send + Sync + 'static {
+pub trait PostRepository: Clone + Send + Sync + 'static {
     /// Asynchronously persist a new [Post].
     ///
     /// # Errors
