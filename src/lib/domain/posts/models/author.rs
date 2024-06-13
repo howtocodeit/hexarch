@@ -39,4 +39,8 @@ impl CreateAuthorRequest {
     pub fn new(name: AuthorName) -> Self {
         Self { name }
     }
+
+    pub fn name(&self) -> &AuthorName {
+        &self.name
+    }
 }

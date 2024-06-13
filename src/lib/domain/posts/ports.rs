@@ -28,7 +28,7 @@ pub trait PostService: Clone + Send + Sync + 'static {
     /// - [CreatePostError::AuthorNotFound] if the [Author] specified in the request does not exist.
     fn create_post(
         &self,
-        req: CreatePostRequest,
+        req: &CreatePostRequest,
     ) -> impl Future<Output = Result<Post, CreatePostError>> + Send;
 
     /// Asynchronously create a new [Author].
@@ -38,7 +38,7 @@ pub trait PostService: Clone + Send + Sync + 'static {
     /// - [CreateAuthorError::Duplicate] if an [Author] with the same [AuthorName] already exists.
     fn create_author(
         &self,
-        req: CreateAuthorRequest,
+        req: &CreateAuthorRequest,
     ) -> impl Future<Output = Result<Author, CreateAuthorError>> + Send;
 }
 
@@ -55,7 +55,7 @@ pub trait PostRepository: Clone + Send + Sync + 'static {
     ///   does not exist.
     fn create_post(
         &self,
-        req: CreatePostRequest,
+        req: &CreatePostRequest,
     ) -> impl Future<Output = Result<Post, CreatePostError>> + Send;
 
     /// Asynchronously persist a new [Author].
@@ -66,6 +66,6 @@ pub trait PostRepository: Clone + Send + Sync + 'static {
     ///   already exists.
     fn create_author(
         &self,
-        req: CreateAuthorRequest,
+        req: &CreateAuthorRequest,
     ) -> impl Future<Output = Result<Author, CreateAuthorError>> + Send;
 }

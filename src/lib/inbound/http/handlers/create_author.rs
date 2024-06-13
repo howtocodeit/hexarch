@@ -17,7 +17,7 @@ use crate::inbound::http::responses::{ErrorResponseBody, ErrorResponseData, Resp
 
 /// The body of an [Author] creation request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-struct CreateAuthorHttpRequestBody {
+pub struct CreateAuthorHttpRequestBody {
     name: String,
 }
 
@@ -74,7 +74,7 @@ pub async fn create_author<PS: PostService>(
 ) -> Response {
     state
         .post_service
-        .create_author(body.into_domain())
+        .create_author(&body.into_domain())
         .await
         .map_err(|e| {
             (

@@ -22,11 +22,11 @@ impl<PR: PostRepository> Service<PR> {
 }
 
 impl<PR: PostRepository> PostService for Service<PR> {
-    async fn create_post(&self, req: CreatePostRequest) -> Result<Post, CreatePostError> {
+    async fn create_post(&self, req: &CreatePostRequest) -> Result<Post, CreatePostError> {
         self.repo.create_post(req).await
     }
 
-    async fn create_author(&self, req: CreateAuthorRequest) -> Result<Author, CreateAuthorError> {
+    async fn create_author(&self, req: &CreateAuthorRequest) -> Result<Author, CreateAuthorError> {
         self.repo.create_author(req).await
     }
 }
