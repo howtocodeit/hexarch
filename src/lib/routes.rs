@@ -101,13 +101,13 @@ pub struct ApiErrorData {
 
 pub type ErrorResponseBody = ApiResponseBody<ApiErrorData>;
 
+pub type ErrorResponse = (StatusCode, ErrorResponseBody);
+
 /// The body of an [Author] creation request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CreateAuthorRequestBody {
     name: String,
 }
-
-pub type ErrorResponse = (StatusCode, ErrorResponseBody);
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CreateAuthorResponseData {
