@@ -8,7 +8,7 @@ use std::fmt::{Display, Formatter};
 use derive_more::{AsRef, Deref, From};
 
 /// A [String] with leading and trailing whitespace removed.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, From, AsRef, Deref)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, AsRef, Deref)]
 pub struct TrimmedString(String);
 
 impl TrimmedString {

@@ -14,7 +14,7 @@ use crate::domain::posts::models::author::{Author, CreateAuthorRequest};
 #[allow(unused_imports)] // AuthorName is used in doc comments
 use crate::domain::posts::models::author::AuthorName;
 use crate::domain::posts::models::errors::{CreateAuthorError, CreatePostError};
-use crate::domain::posts::models::post::{CreatePostRequest, Post};
+use crate::domain::posts::models::post::Post;
 
 /// `PostService` is the public API for the posts domain.
 ///
@@ -26,10 +26,10 @@ pub trait PostService: Clone + Send + Sync + 'static {
     /// # Errors
     ///
     /// - [CreatePostError::AuthorNotFound] if the [Author] specified in the request does not exist.
-    fn create_post(
-        &self,
-        req: &CreatePostRequest,
-    ) -> impl Future<Output = Result<Post, CreatePostError>> + Send;
+    // fn create_post(
+    //     &self,
+    //     req: &CreatePostRequest,
+    // ) -> impl Future<Output = Result<Post, CreatePostError>> + Send;
 
     /// Asynchronously create a new [Author].
     ///
@@ -42,21 +42,17 @@ pub trait PostService: Clone + Send + Sync + 'static {
     ) -> impl Future<Output = Result<Author, CreateAuthorError>> + Send;
 }
 
-/// `PostRepository` represents a store of post data.
-///
-/// Repository implementations must conform to this contract – the domain is not concerned with
-/// the implementation details or underlying technology of any particular implementation.
-pub trait PostRepository: Clone + Send + Sync + 'static {
+pub trait AuthorRepository: Send + Sync + Clone + 'static {
     /// Asynchronously persist a new [Post].
     ///
     /// # Errors
     ///
     /// - MUST return [CreatePostError::AuthorNotFound] if the [Author] specified in the request
     ///   does not exist.
-    fn create_post(
-        &self,
-        req: &CreatePostRequest,
-    ) -> impl Future<Output = Result<Post, CreatePostError>> + Send;
+    // fn create_post(
+    //     &self,
+    //     req: &CreatePostRequest,
+    // ) -> impl Future<Output = Result<Post, CreatePostError>>;
 
     /// Asynchronously persist a new [Author].
     ///

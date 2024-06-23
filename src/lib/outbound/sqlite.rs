@@ -1,14 +1,13 @@
 use std::str::FromStr;
 
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use sqlx::{Executor, SqlitePool, Transaction};
 use sqlx::sqlite::SqliteConnectOptions;
 use uuid::Uuid;
 
-use crate::domain::posts::models::author::{Author, CreateAuthorRequest};
-use crate::domain::posts::models::errors::{CreateAuthorError, CreatePostError};
-use crate::domain::posts::models::post::{CreatePostRequest, Post};
-use crate::domain::posts::ports::PostRepository;
+use crate::domain::posts::models::author::{Author, AuthorName, CreateAuthorRequest};
+use crate::domain::posts::models::errors::CreateAuthorError;
+use crate::domain::posts::ports::AuthorRepository;
 
 #[derive(Debug, Clone)]
 pub struct Sqlite {
@@ -31,31 +30,32 @@ impl Sqlite {
     async fn save_author(
         &self,
         tx: &mut Transaction<'_, sqlx::Sqlite>,
-        name: &str,
+        name: &AuthorName,
     ) -> Result<Uuid, sqlx::Error> {
         let id = Uuid::new_v4();
         let id_as_string = id.to_string();
+        let name = &name.to_string();
         let query = sqlx::query!(
             "INSERT INTO authors (id, name) VALUES ($1, $2)",
             id_as_string,
-            name
+            name,
         );
         tx.execute(query).await?;
         Ok(id)
     }
 }
 
-impl PostRepository for Sqlite {
-    async fn create_post(&self, req: &CreatePostRequest) -> Result<Post, CreatePostError> {
-        todo!()
-    }
+impl AuthorRepository for Sqlite {
+    // async fn create_post(&self, req: &CreatePostRequest) -> Result<Post, CreatePostError> {
+    //     todo!()
+    // }
 
     async fn create_author(&self, req: &CreateAuthorRequest) -> Result<Author, CreateAuthorError> {
         let mut tx = self
             .pool
             .begin()
             .await
-            .unwrap_or_else(|e| panic!("failed to start SQLite transaction: {}", e));
+            .context("failed to start SQLite transaction")?;
 
         let author_id = self.save_author(&mut tx, req.name()).await.map_err(|e| {
             if is_unique_constraint_violation(&e) {
@@ -63,15 +63,17 @@ impl PostRepository for Sqlite {
                     name: req.name().clone(),
                 }
             } else {
-                panic!("received unexpected SQLite error: {}", e);
+                anyhow!(e)
+                    .context(format!("failed to save author with name {:?}", req.name()))
+                    .into()
             }
         })?;
 
         tx.commit()
             .await
-            .unwrap_or_else(|e| panic!("failed to commit SQLite transaction: {}", e));
+            .context("failed to commit SQLite transaction")?;
 
-        Ok(Author::new(author_id, req.name()))
+        Ok(Author::new(author_id, req.name().clone()))
     }
 }
 

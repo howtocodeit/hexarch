@@ -6,22 +6,12 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use axum::{http, Json, Router};
-use axum::extract::State;
-use axum::http::{Request, StatusCode};
-use axum::response::IntoResponse;
-use axum::routing::{post, Route};
-use serde::{Deserialize, Serialize};
+use axum::{Json, Router};
+use axum::routing::post;
 use tokio::net;
-use tower_http::trace::{HttpMakeClassifier, TraceLayer};
-use tower_layer::Layer;
-use tracing::{instrument, Span};
 
-use crate::domain::posts::models::author::{Author, CreateAuthorRequest};
-use crate::domain::posts::models::errors::CreateAuthorError;
-use crate::domain::posts::ports::{PostRepository, PostService};
+use crate::domain::posts::ports::AuthorRepository;
 use crate::inbound::http::handlers::create_author::create_author;
-use crate::inbound::http::responses::{ErrorResponseBody, ErrorResponseData, ResponseBody};
 
 mod handlers;
 mod responses;
@@ -34,8 +24,8 @@ pub struct HttpServerConfig<'a> {
 
 #[derive(Debug, Clone)]
 /// The global application state shared between all request handlers.
-struct AppState<PS: PostService> {
-    post_service: Arc<PS>,
+struct AppState<PR: AuthorRepository> {
+    author_repo: Arc<PR>,
 }
 
 /// The application's HTTP server. The underlying HTTP package is opaque to module consumers.
@@ -47,7 +37,7 @@ pub struct HttpServer {
 impl HttpServer {
     /// Returns a new HTTP server bound to the port specified in `config`.
     pub async fn new(
-        post_service: impl PostService,
+        post_repo: impl AuthorRepository,
         config: HttpServerConfig<'_>,
     ) -> anyhow::Result<Self> {
         let trace_layer = tower_http::trace::TraceLayer::new_for_http().make_span_with(
@@ -59,7 +49,7 @@ impl HttpServer {
 
         // Construct dependencies to inject into handlers.
         let state = AppState {
-            post_service: Arc::new(post_service),
+            author_repo: Arc::new(post_repo),
         };
 
         let router = axum::Router::new()
@@ -84,6 +74,6 @@ impl HttpServer {
     }
 }
 
-fn api_routes<PS: PostService>() -> Router<AppState<PS>> {
-    Router::new().route("/authors", post(create_author::<PS>))
+fn api_routes<PR: AuthorRepository>() -> Router<AppState<PR>> {
+    Router::new().route("/authors", post(create_author::<PR>))
 }

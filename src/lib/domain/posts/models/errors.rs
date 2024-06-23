@@ -17,9 +17,11 @@ pub enum CreatePostError {
     // to be extended as new error scenarios are introduced
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Error)]
+#[derive(Debug, Error)]
 pub enum CreateAuthorError {
     #[error("author with name {name} already exists")]
     Duplicate { name: AuthorName },
+    #[error(transparent)]
+    Unknown(#[from] anyhow::Error),
     // to be extended as new error scenarios are introduced
 }
