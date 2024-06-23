@@ -8,14 +8,7 @@
 
 use thiserror::Error;
 
-use crate::domain::posts::models::author::AuthorName;
-
-#[derive(Debug, Clone, PartialEq, Eq, Error)]
-pub enum CreatePostError {
-    #[error("author with id {id} was not found")]
-    AuthorNotFound { id: uuid::Uuid },
-    // to be extended as new error scenarios are introduced
-}
+use crate::domain::author::models::author::AuthorName;
 
 #[derive(Debug, Error)]
 pub enum CreateAuthorError {

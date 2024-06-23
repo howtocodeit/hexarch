@@ -3,20 +3,17 @@
    associated data structures.
 */
 
-use std::sync::Arc;
-
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
 
-use crate::domain::posts::models::author::{
+use crate::domain::author::models::author::{
     Author, AuthorName, AuthorNameEmptyError, CreateAuthorRequest,
 };
-use crate::domain::posts::models::errors::CreateAuthorError;
-use crate::domain::posts::ports::{AuthorRepository, PostService};
+use crate::domain::author::models::errors::CreateAuthorError;
+use crate::domain::author::ports::AuthorService;
 use crate::inbound::http::AppState;
 
 #[derive(Debug, Clone)]
@@ -134,10 +131,6 @@ pub struct ApiErrorData {
     pub message: String,
 }
 
-pub type ErrorResponseBody = ApiResponseBody<ApiErrorData>;
-
-pub type ErrorResponse = (StatusCode, ErrorResponseBody);
-
 /// The body of an [Author] creation request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CreateAuthorRequestBody {
@@ -172,21 +165,19 @@ impl CreateAuthorHttpRequestBody {
     }
 }
 
-type CreateAuthorResponseBody = ApiResponseBody<CreateAuthorResponseData>;
-
 /// Create a new [Author].
 ///
 /// # Responses
 ///
 /// - 201 Created: the [Author] was successfully created.
 /// - 422 Unprocessable entity: An [Author] with the same name already exists.
-pub async fn create_author<PR: AuthorRepository>(
-    State(state): State<AppState<PR>>,
+pub async fn create_author<AS: AuthorService>(
+    State(state): State<AppState<AS>>,
     Json(body): Json<CreateAuthorHttpRequestBody>,
 ) -> Result<ApiSuccess<CreateAuthorResponseData>, ApiError> {
     let domain_req = body.try_into_domain()?;
     state
-        .author_repo
+        .author_service
         .create_author(&domain_req)
         .await
         .map_err(ApiError::from)
@@ -196,22 +187,23 @@ pub async fn create_author<PR: AuthorRepository>(
 #[cfg(test)]
 mod tests {
     use std::mem;
+    use std::sync::Arc;
 
     use anyhow::anyhow;
     use uuid::Uuid;
 
-    use crate::domain::posts::models::author::{Author, CreateAuthorRequest};
-    use crate::domain::posts::models::errors::CreateAuthorError;
-    use crate::domain::posts::ports::AuthorRepository;
+    use crate::domain::author::models::author::{Author, CreateAuthorRequest};
+    use crate::domain::author::models::errors::CreateAuthorError;
+    use crate::domain::author::ports::AuthorService;
 
     use super::*;
 
     #[derive(Clone)]
-    struct MockAuthorRepository {
+    struct MockAuthorService {
         create_author_result: Arc<std::sync::Mutex<Result<Author, CreateAuthorError>>>,
     }
 
-    impl AuthorRepository for MockAuthorRepository {
+    impl AuthorService for MockAuthorService {
         async fn create_author(
             &self,
             _: &CreateAuthorRequest,
@@ -227,14 +219,14 @@ mod tests {
     async fn test_create_author_success() {
         let author_name = AuthorName::new("Angus").unwrap();
         let author_id = Uuid::new_v4();
-        let repo = MockAuthorRepository {
+        let service = MockAuthorService {
             create_author_result: Arc::new(std::sync::Mutex::new(Ok(Author::new(
                 author_id,
                 author_name.clone(),
             )))),
         };
         let state = axum::extract::State(AppState {
-            author_repo: Arc::new(repo),
+            author_service: Arc::new(service),
         });
         let body = axum::extract::Json(CreateAuthorHttpRequestBody {
             name: author_name.to_string(),

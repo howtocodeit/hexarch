@@ -1,5 +1,5 @@
 /*
-   Module `ports` specifies the API by which external modules interact with the posts domain.
+   Module `ports` specifies the API by which external modules interact with the author domain.
 
    All traits are bounded by `Send + Sync + 'static`, since their implementations must be shareable
    between request-handling threads.
@@ -10,27 +10,16 @@
 
 use std::future::Future;
 
-use crate::domain::posts::models::author::{Author, CreateAuthorRequest};
+use crate::domain::author::models::author::{Author, CreateAuthorRequest};
 #[allow(unused_imports)] // AuthorName is used in doc comments
-use crate::domain::posts::models::author::AuthorName;
-use crate::domain::posts::models::errors::{CreateAuthorError, CreatePostError};
-use crate::domain::posts::models::post::Post;
+use crate::domain::author::models::author::AuthorName;
+use crate::domain::author::models::errors::CreateAuthorError;
 
-/// `PostService` is the public API for the posts domain.
+/// `AuthorService` is the public API for the author domain.
 ///
 /// External modules must conform to this contract – the domain is not concerned with the
 /// implementation details or underlying technology of any external code.
-pub trait PostService: Clone + Send + Sync + 'static {
-    /// Asynchronously create a new [Post].
-    ///
-    /// # Errors
-    ///
-    /// - [CreatePostError::AuthorNotFound] if the [Author] specified in the request does not exist.
-    // fn create_post(
-    //     &self,
-    //     req: &CreatePostRequest,
-    // ) -> impl Future<Output = Result<Post, CreatePostError>> + Send;
-
+pub trait AuthorService: Clone + Send + Sync + 'static {
     /// Asynchronously create a new [Author].
     ///
     /// # Errors
@@ -42,18 +31,11 @@ pub trait PostService: Clone + Send + Sync + 'static {
     ) -> impl Future<Output = Result<Author, CreateAuthorError>> + Send;
 }
 
+/// `AuthorRepository` represents a store of author data.
+///
+/// External modules must conform to this contract – the domain is not concerned with the
+/// implementation details or underlying technology of any external code.
 pub trait AuthorRepository: Send + Sync + Clone + 'static {
-    /// Asynchronously persist a new [Post].
-    ///
-    /// # Errors
-    ///
-    /// - MUST return [CreatePostError::AuthorNotFound] if the [Author] specified in the request
-    ///   does not exist.
-    // fn create_post(
-    //     &self,
-    //     req: &CreatePostRequest,
-    // ) -> impl Future<Output = Result<Post, CreatePostError>>;
-
     /// Asynchronously persist a new [Author].
     ///
     /// # Errors

@@ -4,4 +4,3 @@
 
 pub mod author;
 pub mod errors;
-pub mod post;

@@ -6,11 +6,11 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use axum::{Json, Router};
+use axum::Router;
 use axum::routing::post;
 use tokio::net;
 
-use crate::domain::posts::ports::AuthorRepository;
+use crate::domain::author::ports::AuthorService;
 use crate::inbound::http::handlers::create_author::create_author;
 
 mod handlers;
@@ -24,8 +24,8 @@ pub struct HttpServerConfig<'a> {
 
 #[derive(Debug, Clone)]
 /// The global application state shared between all request handlers.
-struct AppState<PR: AuthorRepository> {
-    author_repo: Arc<PR>,
+struct AppState<AS: AuthorService> {
+    author_service: Arc<AS>,
 }
 
 /// The application's HTTP server. The underlying HTTP package is opaque to module consumers.
@@ -37,7 +37,7 @@ pub struct HttpServer {
 impl HttpServer {
     /// Returns a new HTTP server bound to the port specified in `config`.
     pub async fn new(
-        post_repo: impl AuthorRepository,
+        author_service: impl AuthorService,
         config: HttpServerConfig<'_>,
     ) -> anyhow::Result<Self> {
         let trace_layer = tower_http::trace::TraceLayer::new_for_http().make_span_with(
@@ -49,7 +49,7 @@ impl HttpServer {
 
         // Construct dependencies to inject into handlers.
         let state = AppState {
-            author_repo: Arc::new(post_repo),
+            author_service: Arc::new(author_service),
         };
 
         let router = axum::Router::new()
@@ -74,6 +74,6 @@ impl HttpServer {
     }
 }
 
-fn api_routes<PR: AuthorRepository>() -> Router<AppState<PR>> {
-    Router::new().route("/authors", post(create_author::<PR>))
+fn api_routes<AS: AuthorService>() -> Router<AppState<AS>> {
+    Router::new().route("/authors", post(create_author::<AS>))
 }

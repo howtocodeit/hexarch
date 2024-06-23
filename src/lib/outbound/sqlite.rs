@@ -5,9 +5,9 @@ use sqlx::{Executor, SqlitePool, Transaction};
 use sqlx::sqlite::SqliteConnectOptions;
 use uuid::Uuid;
 
-use crate::domain::posts::models::author::{Author, AuthorName, CreateAuthorRequest};
-use crate::domain::posts::models::errors::CreateAuthorError;
-use crate::domain::posts::ports::AuthorRepository;
+use crate::domain::author::models::author::{Author, AuthorName, CreateAuthorRequest};
+use crate::domain::author::models::errors::CreateAuthorError;
+use crate::domain::author::ports::AuthorRepository;
 
 #[derive(Debug, Clone)]
 pub struct Sqlite {
@@ -46,10 +46,6 @@ impl Sqlite {
 }
 
 impl AuthorRepository for Sqlite {
-    // async fn create_post(&self, req: &CreatePostRequest) -> Result<Post, CreatePostError> {
-    //     todo!()
-    // }
-
     async fn create_author(&self, req: &CreateAuthorRequest) -> Result<Author, CreateAuthorError> {
         let mut tx = self
             .pool

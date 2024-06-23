@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use derive_more::From;
 use thiserror::Error;
 
-/// A uniquely identifiable author of blog posts.
+/// A uniquely identifiable author of blog author.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Author {
     id: uuid::Uuid,
