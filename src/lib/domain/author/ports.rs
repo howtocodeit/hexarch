@@ -47,3 +47,27 @@ pub trait AuthorRepository: Send + Sync + Clone + 'static {
         req: &CreateAuthorRequest,
     ) -> impl Future<Output = Result<Author, CreateAuthorError>> + Send;
 }
+
+/// `AuthorMetrics` describes an aggregator of author-related metrics, such as a time-series
+/// database.
+pub trait AuthorMetrics: Send + Sync + Clone + 'static {
+    /// Record a successful author creation.
+    fn record_creation_success(&self) -> impl Future<Output = ()> + Send;
+
+    /// Record an author creation failure.
+    fn record_creation_failure(&self) -> impl Future<Output = ()> + Send;
+}
+
+/// `AuthorNotifier` triggers notifications to authors.
+///
+/// Whether or the notification medium (email, SMS, etc.) is known by the business logic is a
+/// judgement call based on your use case.
+///
+/// Some domains will always require email, for example, so hiding this detail would be
+/// pointless.
+///
+/// For others, code coordinating notifications will be complex enough to warrant its own domain.
+/// In this case, an `AuthorNotifier` adapter will call that domain's `Service`.
+pub trait AuthorNotifier: Send + Sync + Clone + 'static {
+    fn author_created(&self, author: &Author) -> impl Future<Output = ()> + Send;
+}

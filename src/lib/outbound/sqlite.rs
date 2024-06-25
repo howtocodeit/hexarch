@@ -69,7 +69,11 @@ impl AuthorRepository for Sqlite {
             .await
             .context("failed to commit SQLite transaction")?;
 
-        Ok(Author::new(author_id, req.name().clone()))
+        Ok(Author::new(
+            author_id,
+            req.name().clone(),
+            req.email().clone(),
+        ))
     }
 }
 

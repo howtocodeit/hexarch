@@ -8,11 +8,12 @@ use thiserror::Error;
 pub struct Author {
     id: uuid::Uuid,
     name: AuthorName,
+    email: EmailAddress,
 }
 
 impl Author {
-    pub fn new(id: uuid::Uuid, name: AuthorName) -> Self {
-        Self { id, name }
+    pub fn new(id: uuid::Uuid, name: AuthorName, email: EmailAddress) -> Self {
+        Self { id, name, email }
     }
 
     pub fn id(&self) -> &uuid::Uuid {
@@ -25,6 +26,7 @@ impl Author {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// A valid author name.
 pub struct AuthorName(String);
 
 #[derive(Clone, Debug, Error)]
@@ -48,18 +50,52 @@ impl Display for AuthorName {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// A valid email address.
+pub struct EmailAddress(String);
+
+#[derive(Clone, Debug, Error)]
+#[error("{invalid_email} is not a valid email address")]
+pub struct EmailAddressError {
+    pub invalid_email: String,
+}
+
+impl EmailAddress {
+    pub fn new(raw: &str) -> Result<Self, EmailAddressError> {
+        let trimmed = raw.trim();
+        Self::validate_email_address(trimmed)?;
+        Ok(Self(trimmed.to_string()))
+    }
+
+    fn validate_email_address(_: &str) -> Result<(), EmailAddressError> {
+        // Unimplemented example.
+        Ok(())
+    }
+}
+
+impl Display for EmailAddress {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
 /// The fields required by the domain to create an [Author].
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct CreateAuthorRequest {
     name: AuthorName,
+    email: EmailAddress,
 }
 
 impl CreateAuthorRequest {
-    pub fn new(name: AuthorName) -> Self {
-        Self { name }
+    pub fn new(name: AuthorName, email: EmailAddress) -> Self {
+        Self { name, email }
     }
 
     pub fn name(&self) -> &AuthorName {
         &self.name
+    }
+
+    pub fn email(&self) -> &EmailAddress {
+        &self.email
     }
 }

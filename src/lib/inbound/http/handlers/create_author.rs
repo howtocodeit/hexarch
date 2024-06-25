@@ -8,9 +8,10 @@ use axum::http::StatusCode;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 use crate::domain::author::models::author::{
-    Author, AuthorName, AuthorNameEmptyError, CreateAuthorRequest,
+    Author, AuthorName, AuthorNameEmptyError, CreateAuthorRequest, EmailAddress, EmailAddressError,
 };
 use crate::domain::author::models::errors::CreateAuthorError;
 use crate::domain::author::ports::AuthorService;
@@ -66,9 +67,16 @@ impl From<CreateAuthorError> for ApiError {
     }
 }
 
-impl From<AuthorNameEmptyError> for ApiError {
-    fn from(_: AuthorNameEmptyError) -> Self {
-        Self::UnprocessableEntity("author name cannot be empty".to_string())
+impl From<ParseCreateAuthorHttpRequestError> for ApiError {
+    fn from(e: ParseCreateAuthorHttpRequestError) -> Self {
+        let message = match e {
+            ParseCreateAuthorHttpRequestError::Name(_) => "author name cannot be empty".to_string(),
+            ParseCreateAuthorHttpRequestError::EmailAddress(cause) => {
+                format!("email address {} is invalid", cause.invalid_email)
+            }
+        };
+
+        Self::UnprocessableEntity(message)
     }
 }
 
@@ -155,13 +163,23 @@ impl From<&Author> for CreateAuthorResponseData {
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CreateAuthorHttpRequestBody {
     name: String,
+    email_address: String,
+}
+
+#[derive(Debug, Clone, Error)]
+enum ParseCreateAuthorHttpRequestError {
+    #[error(transparent)]
+    Name(#[from] AuthorNameEmptyError),
+    #[error(transparent)]
+    EmailAddress(#[from] EmailAddressError),
 }
 
 impl CreateAuthorHttpRequestBody {
     /// Converts the HTTP request body into a domain request.
-    fn try_into_domain(self) -> Result<CreateAuthorRequest, AuthorNameEmptyError> {
-        let author_name = AuthorName::new(&self.name)?;
-        Ok(CreateAuthorRequest::new(author_name))
+    fn try_into_domain(self) -> Result<CreateAuthorRequest, ParseCreateAuthorHttpRequestError> {
+        let name = AuthorName::new(&self.name)?;
+        let email = EmailAddress::new(&self.email_address)?;
+        Ok(CreateAuthorRequest::new(name, email))
     }
 }
 
@@ -218,11 +236,13 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_create_author_success() {
         let author_name = AuthorName::new("Angus").unwrap();
+        let author_email = EmailAddress::new("angus@howtocodeit.com").unwrap();
         let author_id = Uuid::new_v4();
         let service = MockAuthorService {
             create_author_result: Arc::new(std::sync::Mutex::new(Ok(Author::new(
                 author_id,
                 author_name.clone(),
+                author_email.clone(),
             )))),
         };
         let state = axum::extract::State(AppState {
@@ -230,6 +250,7 @@ mod tests {
         });
         let body = axum::extract::Json(CreateAuthorHttpRequestBody {
             name: author_name.to_string(),
+            email_address: author_email.to_string(),
         });
         let expected = ApiSuccess::new(
             StatusCode::CREATED,
