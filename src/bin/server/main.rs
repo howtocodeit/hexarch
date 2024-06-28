@@ -10,7 +10,6 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     let post_repo = Sqlite::new(&config.database_url).await?;
-    // let post_service = Service::new(post_repo);
 
     let server_config = HttpServerConfig {
         port: &config.server_port,

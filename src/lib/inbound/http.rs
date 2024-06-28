@@ -6,11 +6,11 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use axum::{Json, Router};
+use axum::Router;
 use axum::routing::post;
 use tokio::net;
 
-use crate::domain::posts::ports::AuthorRepository;
+use crate::domain::author::ports::AuthorRepository;
 use crate::inbound::http::handlers::create_author::create_author;
 
 mod handlers;

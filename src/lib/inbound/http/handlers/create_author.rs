@@ -3,20 +3,16 @@
    associated data structures.
 */
 
-use std::sync::Arc;
-
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
 
-use crate::domain::posts::models::author::{
-    Author, AuthorName, AuthorNameEmptyError, CreateAuthorRequest,
+use crate::domain::author::models::author::{
+    Author, AuthorName, AuthorNameEmptyError, CreateAuthorError, CreateAuthorRequest,
 };
-use crate::domain::posts::models::errors::CreateAuthorError;
-use crate::domain::posts::ports::{AuthorRepository, PostService};
+use crate::domain::author::ports::AuthorRepository;
 use crate::inbound::http::AppState;
 
 #[derive(Debug, Clone)]
@@ -134,10 +130,6 @@ pub struct ApiErrorData {
     pub message: String,
 }
 
-pub type ErrorResponseBody = ApiResponseBody<ApiErrorData>;
-
-pub type ErrorResponse = (StatusCode, ErrorResponseBody);
-
 /// The body of an [Author] creation request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CreateAuthorRequestBody {
@@ -172,8 +164,6 @@ impl CreateAuthorHttpRequestBody {
     }
 }
 
-type CreateAuthorResponseBody = ApiResponseBody<CreateAuthorResponseData>;
-
 /// Create a new [Author].
 ///
 /// # Responses
@@ -196,13 +186,13 @@ pub async fn create_author<PR: AuthorRepository>(
 #[cfg(test)]
 mod tests {
     use std::mem;
+    use std::sync::Arc;
 
     use anyhow::anyhow;
     use uuid::Uuid;
 
-    use crate::domain::posts::models::author::{Author, CreateAuthorRequest};
-    use crate::domain::posts::models::errors::CreateAuthorError;
-    use crate::domain::posts::ports::AuthorRepository;
+    use crate::domain::author::models::author::{Author, CreateAuthorRequest};
+    use crate::domain::author::ports::AuthorRepository;
 
     use super::*;
 

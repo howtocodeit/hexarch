@@ -5,9 +5,10 @@ use sqlx::{Executor, SqlitePool, Transaction};
 use sqlx::sqlite::SqliteConnectOptions;
 use uuid::Uuid;
 
-use crate::domain::posts::models::author::{Author, AuthorName, CreateAuthorRequest};
-use crate::domain::posts::models::errors::CreateAuthorError;
-use crate::domain::posts::ports::AuthorRepository;
+use crate::domain::author::models::author::{
+    Author, AuthorName, CreateAuthorError, CreateAuthorRequest,
+};
+use crate::domain::author::ports::AuthorRepository;
 
 #[derive(Debug, Clone)]
 pub struct Sqlite {

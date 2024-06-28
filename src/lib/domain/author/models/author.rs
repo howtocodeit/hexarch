@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use derive_more::From;
 use thiserror::Error;
 
-/// A uniquely identifiable author of blog posts.
+/// A uniquely identifiable author of blog author.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Author {
     id: uuid::Uuid,
@@ -62,4 +62,13 @@ impl CreateAuthorRequest {
     pub fn name(&self) -> &AuthorName {
         &self.name
     }
+}
+
+#[derive(Debug, Error)]
+pub enum CreateAuthorError {
+    #[error("author with name {name} already exists")]
+    Duplicate { name: AuthorName },
+    #[error(transparent)]
+    Unknown(#[from] anyhow::Error),
+    // to be extended as new error scenarios are introduced
 }
