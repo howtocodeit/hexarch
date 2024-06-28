@@ -1,5 +1,5 @@
-use crate::domain::author::models::author::Author;
-use crate::domain::author::ports::AuthorNotifier;
+use crate::domain::blog::models::author::Author;
+use crate::domain::blog::ports::AuthorNotifier;
 
 /// An unimplemented example of an adapter to [AuthorNotifier].
 #[derive(Debug, Clone)]

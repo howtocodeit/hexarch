@@ -1,5 +1,5 @@
 /*
-   Module `ports` specifies the API by which external modules interact with the author domain.
+   Module `ports` specifies the API by which external modules interact with the blog domain.
 
    All traits are bounded by `Send + Sync + 'static`, since their implementations must be shareable
    between request-handling threads.
@@ -10,16 +10,16 @@
 
 use std::future::Future;
 
-use crate::domain::author::models::author::{Author, CreateAuthorRequest};
+use crate::domain::blog::models::author::{Author, CreateAuthorRequest};
 #[allow(unused_imports)] // AuthorName is used in doc comments
-use crate::domain::author::models::author::AuthorName;
-use crate::domain::author::models::errors::CreateAuthorError;
+use crate::domain::blog::models::author::AuthorName;
+use crate::domain::blog::models::author::CreateAuthorError;
 
-/// `AuthorService` is the public API for the author domain.
+/// `BlogService` is the public API for the blog domain.
 ///
 /// External modules must conform to this contract – the domain is not concerned with the
 /// implementation details or underlying technology of any external code.
-pub trait AuthorService: Clone + Send + Sync + 'static {
+pub trait BlogService: Clone + Send + Sync + 'static {
     /// Asynchronously create a new [Author].
     ///
     /// # Errors
@@ -31,11 +31,11 @@ pub trait AuthorService: Clone + Send + Sync + 'static {
     ) -> impl Future<Output = Result<Author, CreateAuthorError>> + Send;
 }
 
-/// `AuthorRepository` represents a store of author data.
+/// `BlogRepository` represents a store of blog data.
 ///
 /// External modules must conform to this contract – the domain is not concerned with the
 /// implementation details or underlying technology of any external code.
-pub trait AuthorRepository: Send + Sync + Clone + 'static {
+pub trait BlogRepository: Send + Sync + Clone + 'static {
     /// Asynchronously persist a new [Author].
     ///
     /// # Errors
@@ -48,14 +48,14 @@ pub trait AuthorRepository: Send + Sync + Clone + 'static {
     ) -> impl Future<Output = Result<Author, CreateAuthorError>> + Send;
 }
 
-/// `AuthorMetrics` describes an aggregator of author-related metrics, such as a time-series
+/// `BlogMetrics` describes an aggregator of blog-related metrics, such as a time-series
 /// database.
-pub trait AuthorMetrics: Send + Sync + Clone + 'static {
+pub trait BlogMetrics: Send + Sync + Clone + 'static {
     /// Record a successful author creation.
-    fn record_creation_success(&self) -> impl Future<Output = ()> + Send;
+    fn record_author_creation_success(&self) -> impl Future<Output = ()> + Send;
 
     /// Record an author creation failure.
-    fn record_creation_failure(&self) -> impl Future<Output = ()> + Send;
+    fn record_author_creation_failure(&self) -> impl Future<Output = ()> + Send;
 }
 
 /// `AuthorNotifier` triggers notifications to authors.

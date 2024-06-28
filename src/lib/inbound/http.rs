@@ -10,7 +10,7 @@ use axum::Router;
 use axum::routing::post;
 use tokio::net;
 
-use crate::domain::author::ports::AuthorService;
+use crate::domain::blog::ports::BlogService;
 use crate::inbound::http::handlers::create_author::create_author;
 
 mod handlers;
@@ -24,8 +24,8 @@ pub struct HttpServerConfig<'a> {
 
 #[derive(Debug, Clone)]
 /// The global application state shared between all request handlers.
-struct AppState<AS: AuthorService> {
-    author_service: Arc<AS>,
+struct AppState<BS: BlogService> {
+    author_service: Arc<BS>,
 }
 
 /// The application's HTTP server. The underlying HTTP package is opaque to module consumers.
@@ -37,7 +37,7 @@ pub struct HttpServer {
 impl HttpServer {
     /// Returns a new HTTP server bound to the port specified in `config`.
     pub async fn new(
-        author_service: impl AuthorService,
+        blog_service: impl BlogService,
         config: HttpServerConfig<'_>,
     ) -> anyhow::Result<Self> {
         let trace_layer = tower_http::trace::TraceLayer::new_for_http().make_span_with(
@@ -49,7 +49,7 @@ impl HttpServer {
 
         // Construct dependencies to inject into handlers.
         let state = AppState {
-            author_service: Arc::new(author_service),
+            author_service: Arc::new(blog_service),
         };
 
         let router = axum::Router::new()
@@ -74,6 +74,6 @@ impl HttpServer {
     }
 }
 
-fn api_routes<AS: AuthorService>() -> Router<AppState<AS>> {
-    Router::new().route("/authors", post(create_author::<AS>))
+fn api_routes<BS: BlogService>() -> Router<AppState<BS>> {
+    Router::new().route("/authors", post(create_author::<BS>))
 }

@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use derive_more::From;
 use thiserror::Error;
 
-/// A uniquely identifiable author of blog author.
+/// A uniquely identifiable blog of blog blog.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Author {
     id: uuid::Uuid,
@@ -26,11 +26,11 @@ impl Author {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-/// A valid author name.
+/// A valid blog name.
 pub struct AuthorName(String);
 
 #[derive(Clone, Debug, Error)]
-#[error("author name cannot be empty")]
+#[error("blog name cannot be empty")]
 pub struct AuthorNameEmptyError;
 
 impl AuthorName {
@@ -98,4 +98,13 @@ impl CreateAuthorRequest {
     pub fn email(&self) -> &EmailAddress {
         &self.email
     }
+}
+
+#[derive(Debug, Error)]
+pub enum CreateAuthorError {
+    #[error("blog with name {name} already exists")]
+    Duplicate { name: AuthorName },
+    #[error(transparent)]
+    Unknown(#[from] anyhow::Error),
+    // to be extended as new error scenarios are introduced
 }

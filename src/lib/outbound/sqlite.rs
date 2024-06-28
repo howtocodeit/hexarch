@@ -5,9 +5,9 @@ use sqlx::{Executor, SqlitePool, Transaction};
 use sqlx::sqlite::SqliteConnectOptions;
 use uuid::Uuid;
 
-use crate::domain::author::models::author::{Author, AuthorName, CreateAuthorRequest};
-use crate::domain::author::models::errors::CreateAuthorError;
-use crate::domain::author::ports::AuthorRepository;
+use crate::domain::blog::models::author::{Author, AuthorName, CreateAuthorRequest};
+use crate::domain::blog::models::author::CreateAuthorError;
+use crate::domain::blog::ports::BlogRepository;
 
 #[derive(Debug, Clone)]
 pub struct Sqlite {
@@ -45,7 +45,7 @@ impl Sqlite {
     }
 }
 
-impl AuthorRepository for Sqlite {
+impl BlogRepository for Sqlite {
     async fn create_author(&self, req: &CreateAuthorRequest) -> Result<Author, CreateAuthorError> {
         let mut tx = self
             .pool
@@ -60,7 +60,7 @@ impl AuthorRepository for Sqlite {
                 }
             } else {
                 anyhow!(e)
-                    .context(format!("failed to save author with name {:?}", req.name()))
+                    .context(format!("failed to save blog with name {:?}", req.name()))
                     .into()
             }
         })?;

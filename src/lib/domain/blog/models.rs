@@ -3,4 +3,3 @@
 */
 
 pub mod author;
-pub mod errors;

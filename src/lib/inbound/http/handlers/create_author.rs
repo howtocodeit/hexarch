@@ -10,11 +10,11 @@ use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::domain::author::models::author::{
+use crate::domain::blog::models::author::{
     Author, AuthorName, AuthorNameEmptyError, CreateAuthorRequest, EmailAddress, EmailAddressError,
 };
-use crate::domain::author::models::errors::CreateAuthorError;
-use crate::domain::author::ports::AuthorService;
+use crate::domain::blog::models::author::CreateAuthorError;
+use crate::domain::blog::ports::BlogService;
 use crate::inbound::http::AppState;
 
 #[derive(Debug, Clone)]
@@ -57,7 +57,7 @@ impl From<CreateAuthorError> for ApiError {
     fn from(e: CreateAuthorError) -> Self {
         match e {
             CreateAuthorError::Duplicate { name } => {
-                Self::UnprocessableEntity(format!("author with name {} already exists", name))
+                Self::UnprocessableEntity(format!("blog with name {} already exists", name))
             }
             CreateAuthorError::Unknown(cause) => {
                 tracing::error!("{:?}\n{}", cause, cause.backtrace());
@@ -70,7 +70,7 @@ impl From<CreateAuthorError> for ApiError {
 impl From<ParseCreateAuthorHttpRequestError> for ApiError {
     fn from(e: ParseCreateAuthorHttpRequestError) -> Self {
         let message = match e {
-            ParseCreateAuthorHttpRequestError::Name(_) => "author name cannot be empty".to_string(),
+            ParseCreateAuthorHttpRequestError::Name(_) => "blog name cannot be empty".to_string(),
             ParseCreateAuthorHttpRequestError::EmailAddress(cause) => {
                 format!("email address {} is invalid", cause.invalid_email)
             }
@@ -189,8 +189,8 @@ impl CreateAuthorHttpRequestBody {
 ///
 /// - 201 Created: the [Author] was successfully created.
 /// - 422 Unprocessable entity: An [Author] with the same name already exists.
-pub async fn create_author<AS: AuthorService>(
-    State(state): State<AppState<AS>>,
+pub async fn create_author<BS: BlogService>(
+    State(state): State<AppState<BS>>,
     Json(body): Json<CreateAuthorHttpRequestBody>,
 ) -> Result<ApiSuccess<CreateAuthorResponseData>, ApiError> {
     let domain_req = body.try_into_domain()?;
@@ -210,18 +210,18 @@ mod tests {
     use anyhow::anyhow;
     use uuid::Uuid;
 
-    use crate::domain::author::models::author::{Author, CreateAuthorRequest};
-    use crate::domain::author::models::errors::CreateAuthorError;
-    use crate::domain::author::ports::AuthorService;
+    use crate::domain::blog::models::author::{Author, CreateAuthorRequest};
+    use crate::domain::blog::models::author::CreateAuthorError;
+    use crate::domain::blog::ports::BlogService;
 
     use super::*;
 
     #[derive(Clone)]
-    struct MockAuthorService {
+    struct MockBlogService {
         create_author_result: Arc<std::sync::Mutex<Result<Author, CreateAuthorError>>>,
     }
 
-    impl AuthorService for MockAuthorService {
+    impl BlogService for MockBlogService {
         async fn create_author(
             &self,
             _: &CreateAuthorRequest,
@@ -238,7 +238,7 @@ mod tests {
         let author_name = AuthorName::new("Angus").unwrap();
         let author_email = EmailAddress::new("angus@howtocodeit.com").unwrap();
         let author_id = Uuid::new_v4();
-        let service = MockAuthorService {
+        let service = MockBlogService {
             create_author_result: Arc::new(std::sync::Mutex::new(Ok(Author::new(
                 author_id,
                 author_name.clone(),
