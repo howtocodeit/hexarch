@@ -1,6 +1,7 @@
 ![An illustration of a honeybee standing on top of hexagonal honeycomb](public/hexagonal-architecture-og.jpg)
 
-The complete code for "Master Hexagonal Architecture in Rust".
+The complete code
+for [_Master Hexagonal Architecture in Rust_](https://www.howtocodeit.com/articles/master-hexagonal-architecture-rust).
 
 This repo is divided into branches corresponding to different parts of the guide:
 
